@@ -1,0 +1,15 @@
+[
+    {
+        "customer_id": "CUS001",
+        "name": "Rahul Sharma",
+        "email": "rahul@gmail.com",
+        "phone": "9876543210"
+    },
+
+    {
+        "customer_id": "CUS002",
+        "name": "Aman Verma",
+        "email": "aman@gmail.com",
+        "phone": "9988776655"
+    }
+]

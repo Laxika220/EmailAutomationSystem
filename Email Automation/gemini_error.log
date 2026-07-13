@@ -1,0 +1,11 @@
+{
+    "intent": "missing_package",
+    "backend_action": "CREATE_INVESTIGATION",
+    "parameters": {
+        "order_id": "ORD748596",
+        "customer_id": "CUS001"
+    },
+    "subject": "Regarding Your Order ORD748596 - Delivery Inquiry",
+    "reply": "Dear Rahul Sharma,\n\nI'm truly sorry to hear about the trouble you're experiencing with your order, ORD748596. I understand how frustrating it must be to see your Laptop Charger marked as delivered on June 28th, especially after you've thoroughly checked with your neighbours, security guard, and family, and still not have received it. This is definitely not the experience we want for our customers, and I appreciate you bringing this to our attention.\n\nYou've asked exactly where your package is and what we are going to do about it. Please be assured that we take this very seriously. I have immediately initiated a thorough delivery investigation with our shipping partner, BlueDart, regarding your package, tracking number TRK983421. They will be looking into their delivery records and contacting the delivery personnel to ascertain the exact location and circumstances of the delivery.\n\nWe expect to receive an update on this investigation within 48 hours. As soon as we have more information, I will personally reach out to you with the findings and the next steps to ensure this is resolved to your satisfaction.\n\nThank you for your patience as we work to get to the bottom of this.\n\nBest Regards,\n\nELEMENTAL CONCEPT\nAI Customer Support Executive"
+}
+
