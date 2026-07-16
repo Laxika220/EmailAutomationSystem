@@ -5,3 +5,4 @@ __pycache__/
 .env
 dashboard/node_modules/
 dashboard/dist/
+Email Automation/
