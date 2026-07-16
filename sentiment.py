@@ -1,90 +1,69 @@
+from google import genai
+import os
+import json
+
 USE_SENTIMENT = True
 
-try:
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = "gemini-2.5-flash"
 
-    import torch
-    import torch.nn.functional as F
-
-    from transformers import (
-        AutoTokenizer,
-        AutoModelForSequenceClassification
-    )
-
-    MODEL_NAME = "distilbert-base-uncased-finetuned-sst-2-english"
-
-    device = torch.device(
-        "cuda" if torch.cuda.is_available() else "cpu"
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_NAME
-    )
-
-    model.to(device)
-
-    model.eval()
-
-    print(f"Sentiment Model Loaded ({device})")
-
+if GEMINI_API_KEY:
+    client = genai.Client(api_key=GEMINI_API_KEY)
     SENTIMENT_AVAILABLE = True
-
-except ImportError:
-
-    print("PyTorch/Transformers not installed.")
-    print("Sentiment Analysis Disabled.")
-
+    print("Sentiment Analysis (Gemini) Ready")
+else:
+    client = None
     SENTIMENT_AVAILABLE = False
+    print("GEMINI_API_KEY not set. Sentiment Analysis Disabled.")
+
+SENTIMENT_PROMPT = """Classify the sentiment of the following customer support email.
+
+Categories: POSITIVE, NEGATIVE
+
+Return ONLY a JSON object with exactly these two keys, nothing else:
+{"sentiment": "<POSITIVE or NEGATIVE>", "confidence": <number between 0 and 1>}
+
+Email:
+{text}"""
 
 
 def predict_sentiment(text):
 
     if not USE_SENTIMENT or not SENTIMENT_AVAILABLE:
-
         return {
             "sentiment": None,
             "confidence": 0.0
         }
 
-    inputs = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        padding=True,
-        max_length=512
-    )
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=SENTIMENT_PROMPT.format(text=text)
+        )
 
-    inputs = {
-        key: value.to(device)
-        for key, value in inputs.items()
-    }
+        raw = response.text.strip()
 
-    with torch.no_grad():
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1]
+            raw = raw.rsplit("```", 1)[0].strip()
 
-        outputs = model(**inputs)
+        result = json.loads(raw)
 
-    probabilities = F.softmax(
-        outputs.logits,
-        dim=1
-    )
+        sentiment = result.get("sentiment", "").upper()
+        confidence = float(result.get("confidence", 0.0))
 
-    prediction = torch.argmax(
-        probabilities,
-        dim=1
-    ).item()
+        if sentiment not in ("POSITIVE", "NEGATIVE"):
+            sentiment = None
+            confidence = 0.0
 
-    confidence = probabilities[
-        0
-    ][prediction].item()
+        return {
+            "sentiment": sentiment,
+            "confidence": round(confidence, 4)
+        }
 
-    sentiment = (
-        "POSITIVE"
-        if prediction == 1
-        else "NEGATIVE"
-    )
-
-    return {
-        "sentiment": sentiment,
-        "confidence": round(confidence, 4)
-    }
+    except Exception as e:
+        print(f"Sentiment Analysis Error: {e}")
+        return {
+            "sentiment": None,
+            "confidence": 0.0
+        }
