@@ -89,6 +89,20 @@ def receive_email():
                 "message_id": message_id,
                 "direction": "incoming",
                 "channel": "Email",
+                "sender": customer_email,
+                "subject": customer_subject,
+                "body": customer_message,
+                "timestamp": current_time()
+            }
+        )
+
+        add_message(
+            result["order_id"],
+            {
+                "message_id": message_id,
+                "direction": "outgoing",
+                "channel": "Email",
+                "sender": "Elemental Concept",
                 "subject": result["subject"],
                 "body": result["reply"],
                 "timestamp": current_time()

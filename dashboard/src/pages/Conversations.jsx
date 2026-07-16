@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { fetchConversations, fetchConversation } from "../api";
 import usePolling from "../hooks/usePolling";
-import { MessageSquare, ChevronRight } from "lucide-react";
+import { MessageSquare, ChevronRight, User, Bot } from "lucide-react";
 import "./Conversations.css";
 
 export default function Conversations() {
@@ -78,13 +78,21 @@ export default function Conversations() {
               <div className="messages-list">
                 {messages.map((m, i) => (
                   <div key={i} className={`message-bubble message-${m.direction}`}>
-                    <div className="message-meta">
-                      <span className="message-direction">
-                        {m.direction === "incoming" ? "Incoming Email" : "Outgoing Reply"}
-                      </span>
+                    <div className="message-header">
+                      <div className="message-avatar">
+                        {m.direction === "incoming" ? <User size={14} /> : <Bot size={14} />}
+                      </div>
+                      <div className="message-info">
+                        <span className="message-sender">
+                          {m.sender || (m.direction === "incoming" ? "Customer" : "Elemental Concept")}
+                        </span>
+                        <span className="message-direction-label">
+                          {m.direction === "incoming" ? "Customer Email" : "AI Reply"}
+                        </span>
+                      </div>
                       <span className="message-time">{m.timestamp}</span>
                     </div>
-                    <div className="message-subject">{m.subject}</div>
+                    {m.subject && <div className="message-subject">{m.subject}</div>}
                     <div className="message-body">{m.body}</div>
                   </div>
                 ))}
