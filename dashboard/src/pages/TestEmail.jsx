@@ -100,15 +100,6 @@ export default function TestEmail() {
             {status.message}
           </div>
         )}
-
-        <div style={styles.hint}>
-          <p style={styles.hintTitle}>How it works</p>
-          <p style={styles.hintText}>
-            This sends a POST to <code>/email</code> on the backend, exactly like CloudMailin would.
-            The AI will match an order ID (if present in the message), generate a reply via Gemini,
-            send the email through Brevo, and store both messages in the conversation log.
-          </p>
-        </div>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -194,25 +185,5 @@ const styles = {
     background: "#fef2f2",
     color: "#991b1b",
     border: "1px solid #fecaca",
-  },
-  hint: {
-    marginTop: "24px",
-    padding: "16px",
-    background: "#f8fafc",
-    borderRadius: "8px",
-    border: "1px solid #f1f5f9",
-  },
-  hintTitle: {
-    fontSize: "12px",
-    fontWeight: "700",
-    color: "#475569",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-    marginBottom: "6px",
-  },
-  hintText: {
-    fontSize: "13px",
-    color: "#64748b",
-    lineHeight: "1.6",
   },
 };
