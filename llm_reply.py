@@ -321,7 +321,8 @@ Best Regards,
 
 ELEMENTAL CONCEPT
 AI Customer Support Executive""",
-        "order": None
+        "order": None,
+        "order_id": None
     }
 
 def missing_order_reply():
@@ -352,7 +353,8 @@ Best Regards,
 
 ELEMENTAL CONCEPT
 AI Customer Support Executive""",
-        "order": None
+        "order": None,
+        "order_id": None
     }
 
 def positive_reply():
@@ -374,7 +376,8 @@ def positive_reply():
 
             ELEMENTAL CONCEPT
             AI Customer Support Executive""",
-        "order": None
+        "order": None,
+        "order_id": None
     } 
 
 ## MANUAL TESTING 
