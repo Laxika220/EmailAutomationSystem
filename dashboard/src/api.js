@@ -49,3 +49,19 @@ export async function fetchProducts() {
   const res = await fetch(`${API_BASE}/products`);
   return res.json();
 }
+
+const EMAIL_ENDPOINT = (import.meta.env.VITE_API_BASE_URL || "") + "/email";
+
+export async function sendTestEmail({ senderEmail, subject, body }) {
+  const payload = {
+    envelope: { from: senderEmail },
+    headers: { subject },
+    plain: body,
+  };
+  const res = await fetch(EMAIL_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return { ok: res.ok, status: res.status, text: await res.text() };
+}

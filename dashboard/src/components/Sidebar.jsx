@@ -7,6 +7,7 @@ import {
   Mail,
   MessageSquare,
   Package,
+  Send,
 } from "lucide-react";
 import "./Sidebar.css";
 
@@ -18,6 +19,7 @@ const links = [
   { to: "/emails", label: "Email Logs", icon: Mail },
   { to: "/conversations", label: "Conversations", icon: MessageSquare },
   { to: "/products", label: "Products", icon: Package },
+  { to: "/test-email", label: "Test Email", icon: Send },
 ];
 
 export default function Sidebar() {

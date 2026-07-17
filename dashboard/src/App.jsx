@@ -8,6 +8,7 @@ import Customers from "./pages/Customers";
 import Emails from "./pages/Emails";
 import Conversations from "./pages/Conversations";
 import Products from "./pages/Products";
+import TestEmail from "./pages/TestEmail";
 import "./App.css";
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
                 <Route path="/emails" element={<Emails />} />
                 <Route path="/conversations" element={<Conversations />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/test-email" element={<TestEmail />} />
               </Routes>
             </ErrorBoundary>
           </main>
