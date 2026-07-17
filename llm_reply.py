@@ -17,7 +17,7 @@ import time
 
 MAX_RETRIES = 5
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-flash-latest"
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 SENDER_EMAIL = "shubhamjpsingh9@gmail.com"
 SENDER_NAME = "Elemental Concept"
