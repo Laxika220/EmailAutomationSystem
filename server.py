@@ -70,10 +70,13 @@ def receive_email():
         if result is None:
             return "Generation Failed", 500
 
-        if result.get("backend_action") != "NONE":
+        order = result.get("order")
+        order_id = order.get("order_id") if order else None
+
+        if result.get("backend_action") != "NONE" and order:
             perform_backend_action(
                 result["backend_action"],
-                result["order"],
+                order,
                 result["parameters"]
             )
 
@@ -84,7 +87,7 @@ def receive_email():
         )
 
         add_message(
-            result["order_id"],
+            order_id,
             {
                 "message_id": message_id,
                 "direction": "incoming",
@@ -97,7 +100,7 @@ def receive_email():
         )
 
         add_message(
-            result["order_id"],
+            order_id,
             {
                 "message_id": message_id,
                 "direction": "outgoing",
@@ -113,7 +116,7 @@ def receive_email():
             {
                 "message_id": message_id,
                 "customer_email": customer_email,
-                "order_id": result["order"]["order_id"],
+                "order_id": order_id,
                 "backend_action": result["backend_action"],
                 "processed_at": current_time(),
                 "status": "Processed"
@@ -248,6 +251,16 @@ def get_conversations():
         o = get_order(conv.get("order_id"))
         item["order_status"] = o["status"] if o else "Unknown"
         item["message_count"] = len(conv.get("messages", []))
+
+        if o:
+            c = get_customer(o.get("customer_id"))
+            item["customer_name"] = c["name"] if c else "Unknown"
+            item["customer_email"] = c["email"] if c else "Unknown"
+        else:
+            incoming = next((m for m in conv.get("messages", []) if m.get("direction") == "incoming"), None)
+            item["customer_name"] = incoming["sender"] if incoming else "Unknown"
+            item["customer_email"] = incoming["sender"] if incoming else "Unknown"
+
         enriched.append(item)
     return jsonify(enriched)
 

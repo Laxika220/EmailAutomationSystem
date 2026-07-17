@@ -1,4 +1,5 @@
 import json
+import uuid
 
 def load_database():
 
@@ -88,11 +89,13 @@ def add_conversation(conversation):
     save_conversations()
 
 def add_message(order_id, message):
-    conversation = get_conversation(order_id)
+    conversation = get_conversation(order_id) if order_id else None
     if conversation is None:
+        conv_id = f"CONV-{order_id}" if order_id else f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
         conversation = {
-            "conversation_id": f"CONV-{order_id}",
+            "conversation_id": conv_id,
             "order_id": order_id,
+            "order_status": None,
             "messages": []
         }
         CONVERSATIONS.append(conversation)
