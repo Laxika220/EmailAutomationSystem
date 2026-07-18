@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
+import uuid
 
 from llm_reply import generate_reply, send_email
 from backend import perform_backend_action, current_time
