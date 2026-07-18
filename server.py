@@ -108,6 +108,7 @@ def receive_email():
         
         add_message(
             order_id,
+            customer_email,
             {
                 "message_id": message_id,
                 "direction": "outgoing",
