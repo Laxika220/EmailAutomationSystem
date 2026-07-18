@@ -90,17 +90,15 @@ def add_conversation(conversation):
 
 def add_message(order_id, message):
     conversation = None
-
     if order_id:
         conversation = get_conversation(order_id)
-    else:
-        for conv in reversed(CONVERSATIONS):
-            if conv.get("order_id") is None:
-                conversation = conv
-                break
 
     if conversation is None:
-        conv_id = f"CONV-{order_id}" if order_id else f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
+        conv_id = (
+            f"CONV-{order_id}"
+            if order_id
+            else f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
+        )
         conversation = {
             "conversation_id": conv_id,
             "order_id": order_id,
@@ -108,10 +106,8 @@ def add_message(order_id, message):
             "messages": []
         }
         CONVERSATIONS.append(conversation)
-
     conversation["messages"].append(message)
     save_conversations()
-
 
 #Update
 def update_order(order):
