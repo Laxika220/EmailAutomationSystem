@@ -119,6 +119,10 @@ def add_message(order_id, sender_email, message):
             "messages": []
         }
         CONVERSATIONS.append(conversation)
+
+    elif order_id is None:
+        conversation["customer_email"] = sender_email
+    
     conversation["messages"].append(message)
     save_conversations()
     return conversation
