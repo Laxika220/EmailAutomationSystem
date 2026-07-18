@@ -58,6 +58,10 @@ def receive_email():
             or headers.get("message-id")
             or headers.get("Message-ID")
         )
+
+        if not message_id:
+           message_id = f"TEST-{uuid.uuid4()}"
+            
         headers = data.get("headers", {})
         
 
