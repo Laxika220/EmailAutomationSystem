@@ -303,6 +303,11 @@ def get_products():
 def serve_index():
     return send_from_directory(DIST_DIR, "index.html")
 
+@app.route("/version")
+def version():
+    return {
+        "version": "2026-07-18-conversation-fix"
+    }
 
 @app.route("/<path:path>")
 def serve_static(path):
