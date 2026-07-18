@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 import os
 import uuid
+import traceback
 
 from llm_reply import generate_reply, send_email
 from backend import perform_backend_action, current_time
@@ -130,11 +131,9 @@ def receive_email():
         )
         return "OK", 200
 
-    except Exception as e:
-
-        print(f"Server Error: {e}")
+    except Exception :
+        traceback.print_exc()
         return "Internal Server Error", 500
-
 
 # ──────────────────────────────────────────────
 # Dashboard API Endpoints
