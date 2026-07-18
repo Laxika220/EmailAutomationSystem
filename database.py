@@ -71,6 +71,13 @@ def get_conversation(order_id):
         order_id
     )
 
+def get_conversation_by_id(conversation_id):
+    return find_by_key(
+        CONVERSATIONS,
+        "conversation_id",
+        conversation_id
+    )
+
 #ADD
 def add_ticket(ticket):
     TICKETS.append(ticket)
@@ -88,11 +95,17 @@ def add_conversation(conversation):
     CONVERSATIONS.append(conversation)
     save_conversations()
 
-def add_message(order_id, message):
+def add_message(order_id, message, conversation_id=None):
     conversation = None
-    if order_id:
+    # Highest priority: explicit conversation ID
+    if conversation_id:
+        conversation = get_conversation_by_id(conversation_id)
+        
+    # Otherwise, if order-linked, reuse the order conversation
+    elif order_id:
         conversation = get_conversation(order_id)
-
+        
+    # Create a new conversation if none exists
     if conversation is None:
         conv_id = (
             f"CONV-{order_id}"
@@ -108,6 +121,9 @@ def add_message(order_id, message):
         CONVERSATIONS.append(conversation)
     conversation["messages"].append(message)
     save_conversations()
+
+    # Return the conversation so the caller can continue using it
+    return conversation
 
 #Update
 def update_order(order):
