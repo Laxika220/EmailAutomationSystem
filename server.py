@@ -94,6 +94,7 @@ def receive_email():
 
         conversation = add_message(
             order_id,
+            customer_email,
             {
                 "message_id": message_id,
                 "direction": "incoming",
@@ -116,7 +117,6 @@ def receive_email():
                 "body": result["reply"],
                 "timestamp": current_time()
             },
-            conversation["conversation_id"]
         )
 
         add_email_log(
