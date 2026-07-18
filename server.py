@@ -86,7 +86,7 @@ def receive_email():
             result["reply"]
         )
 
-        add_message(
+        conversation = add_message(
             order_id,
             {
                 "message_id": message_id,
@@ -98,7 +98,7 @@ def receive_email():
                 "timestamp": current_time()
             }
         )
-
+        
         add_message(
             order_id,
             {
@@ -109,7 +109,8 @@ def receive_email():
                 "subject": result["subject"],
                 "body": result["reply"],
                 "timestamp": current_time()
-            }
+            },
+            conversation["conversation_id"]
         )
 
         add_email_log(
