@@ -136,6 +136,14 @@ def receive_email():
         traceback.print_exc()
         return "Internal Server Error", 500
 
+
+def get_conversation_by_id(conversation_id):
+    return find_by_key(
+        CONVERSATIONS,
+        "conversation_id",
+        conversation_id
+    )
+
 # ──────────────────────────────────────────────
 # Dashboard API Endpoints
 # ──────────────────────────────────────────────
@@ -271,13 +279,15 @@ def get_conversations():
     return jsonify(enriched)
 
 
-@app.route("/api/conversations/<order_id>", methods=["GET"])
-def get_single_conversation(order_id):
-    conv = get_conversation(order_id)
+@app.route("/api/conversations/id/<conversation_id>")
+def get_single_conversation(conversation_id):
+
+    conv = get_conversation_by_id(conversation_id)
+
     if not conv:
         return jsonify({"error": "Conversation not found"}), 404
-    return jsonify(conv)
 
+    return jsonify(conv)
 
 @app.route("/api/products", methods=["GET"])
 def get_products():
