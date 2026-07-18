@@ -39,7 +39,7 @@ function groupMessages(messages) {
     }
 
     const isGrouped = msg.direction === lastDirection;
-    groups.push({ type: "message", message: msg, grouped: isGrouped, key: msg.message_id || `msg-${i}` });
+    groups.push({ type: "message", message: msg, grouped: isGrouped, key: `${msg.direction}-${msg.sender}-${msg.timestamp}-${i}` });
     lastDirection = msg.direction;
   }
 
@@ -83,6 +83,8 @@ export default function Conversations() {
   }, [selected, enriched]);
 
   const selectedMessages = useMemo(() => {
+    console.log("Selected conversation", selectedConv);
+    console.log("Selected messages", selectedConv?.messages);
     return selectedConv ? selectedConv.messages || [] : [];
   }, [selectedConv]);
 
