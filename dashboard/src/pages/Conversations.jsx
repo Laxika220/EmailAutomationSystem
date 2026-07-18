@@ -49,6 +49,7 @@ function groupMessages(messages) {
 export default function Conversations() {
   const getData = useCallback(() => fetchConversations(), []);
   const { data: conversations = [], loading } = usePolling(getData, 5000);
+  console.log("API conversations:", conversations);
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all");
 
