@@ -78,6 +78,15 @@ def get_conversation_by_id(conversation_id):
         conversation_id
     )
 
+def get_unmatched_conversation(sender_email):
+    for conv in CONVERSATIONS:
+        if (
+            conv.get("order_id") is None and
+            conv.get("customer_email") == sender_email
+        ):
+            return conv
+    return None
+
 #ADD
 def add_ticket(ticket):
     TICKETS.append(ticket)
@@ -95,34 +104,23 @@ def add_conversation(conversation):
     CONVERSATIONS.append(conversation)
     save_conversations()
 
-def add_message(order_id, message, conversation_id=None):
-    conversation = None
-    # Highest priority: explicit conversation ID
-    if conversation_id:
-        conversation = get_conversation_by_id(conversation_id)
-        
-    # Otherwise, if order-linked, reuse the order conversation
-    elif order_id:
+def add_message(order_id, sender_email, message):
+    if order_id:
         conversation = get_conversation(order_id)
-        
-    # Create a new conversation if none exists
+    else:
+        conversation = get_unmatched_conversation(sender_email)
+
     if conversation is None:
-        conv_id = (
-            f"CONV-{order_id}"
-            if order_id
-            else f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
-        )
         conversation = {
-            "conversation_id": conv_id,
+            "conversation_id": f"CONV-{uuid.uuid4().hex[:8]}",
             "order_id": order_id,
+            "customer_email": sender_email,
             "order_status": None,
             "messages": []
         }
         CONVERSATIONS.append(conversation)
     conversation["messages"].append(message)
     save_conversations()
-
-    # Return the conversation so the caller can continue using it
     return conversation
 
 #Update
