@@ -309,7 +309,7 @@ def serve_index():
 @app.route("/version")
 def version():
     return {
-        "version": "2026-07-18-conversation-fix"
+        "version": "2026-07-20-conversation-fix"
     }
 
 @app.route("/<path:path>")
