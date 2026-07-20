@@ -32,6 +32,7 @@ CORS(app)
 def receive_email():
 
     try:
+
         data = request.get_json()
 
         customer_email = data["envelope"]["from"]
@@ -41,6 +42,7 @@ def receive_email():
         print("=" * 60)
         print("New Customer Email")
         print("=" * 60)
+
         print(f"From    : {customer_email}")
         print(f"Subject : {customer_subject}")
         print(f"Message :\n{customer_message}")
@@ -60,123 +62,77 @@ def receive_email():
         )
 
         if not message_id:
-            message_id = f"TEST-{uuid.uuid4()}"
+           message_id = f"TEST-{uuid.uuid4()}"
+            
+        headers = data.get("headers", {})
+        
 
-        # Ignore duplicate emails
-        if get_email_log(message_id):
+        if message_id and get_email_log(message_id):
             print("Duplicate email received. Ignoring.")
             return "Already Processed", 200
 
-        # -----------------------------
-        # Generate AI Reply
-        # -----------------------------
         result = generate_reply(mail)
 
         if result is None:
-            print("generate_reply() returned None")
             return "Generation Failed", 500
 
         order = result.get("order")
         order_id = order.get("order_id") if order else None
 
-        # -----------------------------
-        # Backend Action
-        # -----------------------------
-        try:
-            if result.get("backend_action") != "NONE" and order:
-                perform_backend_action(
-                    result["backend_action"],
-                    order,
-                    result["parameters"]
-                )
-            print("Backend action completed.")
-        except Exception:
-            print("ERROR: perform_backend_action()")
-            traceback.print_exc()
-
-        # -----------------------------
-        # Send Email
-        # -----------------------------
-        try:
-            send_email(
-                mail["from"],
-                result["subject"],
-                result["reply"]
+        if result.get("backend_action") != "NONE" and order:
+            perform_backend_action(
+                result["backend_action"],
+                order,
+                result["parameters"]
             )
-            print("Reply email sent.")
-        except Exception:
-            print("ERROR: send_email()")
-            traceback.print_exc()
-            return "Email Send Failed", 500
 
-        # -----------------------------
-        # Save Incoming Message
-        # -----------------------------
-        try:
-            add_message(
-                order_id,
-                {
-                    "message_id": message_id,
-                    "direction": "incoming",
-                    "channel": "Email",
-                    "sender": customer_email,
-                    "subject": customer_subject,
-                    "body": customer_message,
-                    "timestamp": current_time()
-                },
-                sender_email=customer_email
-            )
-            print("Incoming message saved.")
-        except Exception:
-            print("ERROR: add_message() incoming")
-            traceback.print_exc()
+        send_email(
+            mail["from"],
+            result["subject"],
+            result["reply"]
+        )
 
-        # -----------------------------
-        # Save Outgoing Message
-        # -----------------------------
-        try:
-            add_message(
-                order_id,
-                {
-                    "message_id": f"{message_id}-reply",
-                    "direction": "outgoing",
-                    "channel": "Email",
-                    "sender": "Elemental Concept",
-                    "subject": result["subject"],
-                    "body": result["reply"],
-                    "timestamp": current_time()
-                },
-                sender_email=customer_email
-            )
-            print("Outgoing message saved.")
-        except Exception:
-            print("ERROR: add_message() outgoing")
-            traceback.print_exc()
+        conversation = add_message(
+            order_id,
+            customer_email,
+            {
+                "message_id": message_id,
+                "direction": "incoming",
+                "channel": "Email",
+                "sender": customer_email,
+                "subject": customer_subject,
+                "body": customer_message,
+                "timestamp": current_time()
+            }
+        )
+        
+        add_message(
+            order_id,
+            customer_email,
+            {
+                "message_id": message_id,
+                "direction": "outgoing",
+                "channel": "Email",
+                "sender": "Elemental Concept",
+                "subject": result["subject"],
+                "body": result["reply"],
+                "timestamp": current_time()
+            },
+        )
 
-        # -----------------------------
-        # Save Email Log
-        # -----------------------------
-        try:
-            add_email_log(
-                {
-                    "message_id": message_id,
-                    "customer_email": customer_email,
-                    "order_id": order_id,
-                    "backend_action": result["backend_action"],
-                    "processed_at": current_time(),
-                    "status": "Processed"
-                }
-            )
-            print("Email log saved.")
-        except Exception:
-            print("ERROR: add_email_log()")
-            traceback.print_exc()
-
-        print("Email processing completed successfully.")
+        add_email_log(
+            {
+                "message_id": message_id,
+                "customer_email": customer_email,
+                "order_id": order_id,
+                "backend_action": result["backend_action"],
+                "processed_at": current_time(),
+                "status": "Processed"
+            }
+        )
         return "OK", 200
 
-    except Exception:
-        print("FATAL ERROR inside /email endpoint")
+    except Exception :
         traceback.print_exc()
         return "Internal Server Error", 500
         
