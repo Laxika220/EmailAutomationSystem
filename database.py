@@ -88,13 +88,32 @@ def add_conversation(conversation):
     CONVERSATIONS.append(conversation)
     save_conversations()
 
-def add_message(order_id, message):
-    conversation = get_conversation(order_id) if order_id else None
+def get_conversation_by_sender(sender_email):
+    return find_by_key(
+        CONVERSATIONS,
+        "sender_email",
+        sender_email
+    )
+
+def add_message(order_id, message, sender_email=None):
+    if order_id:
+        conversation = get_conversation(order_id)
+    elif sender_email:
+        conversation = get_conversation_by_sender(sender_email)
+    else:
+        conversation = None
+
     if conversation is None:
-        conv_id = f"CONV-{order_id}" if order_id else f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
+        if order_id:
+            conv_id = f"CONV-{order_id}"
+        elif sender_email:
+            conv_id = f"CONV-EMAIL-{uuid.uuid5(uuid.NAMESPACE_EMAIL, sender_email).hex[:12]}"
+        else:
+            conv_id = f"CONV-UNMATCHED-{str(uuid.uuid4())[:8]}"
         conversation = {
             "conversation_id": conv_id,
             "order_id": order_id,
+            "sender_email": sender_email,
             "order_status": None,
             "messages": []
         }

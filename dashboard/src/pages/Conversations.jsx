@@ -129,7 +129,7 @@ export default function Conversations() {
               <div className="conv-item-info">
                 <div className="conv-item-header">
                   <span className="conv-order-id">
-                    {c.order_id || "No Order ID"}
+                    {c.order_id || c.customer_email || "No Order ID"}
                   </span>
                   <span className={`badge badge-${c.order_status?.toLowerCase().replace(/\s/g, "-") || "unknown"}`}>
                     {c.order_status}
@@ -158,7 +158,7 @@ export default function Conversations() {
                   <div>
                     <h3>{selectedConv.customer_name || "Unknown"}</h3>
                     <span className="conv-header-order">
-                      {selectedConv.order_id || "No Order ID"}
+                      {selectedConv.order_id || selectedConv.customer_email || "No Order ID"}
                       {!selectedConv.is_matched && (
                         <span className="unmatched-badge">Unmatched</span>
                       )}

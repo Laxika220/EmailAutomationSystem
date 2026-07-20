@@ -96,7 +96,8 @@ def receive_email():
                 "subject": customer_subject,
                 "body": customer_message,
                 "timestamp": current_time()
-            }
+            },
+            sender_email=customer_email
         )
 
         add_message(
@@ -109,7 +110,8 @@ def receive_email():
                 "subject": result["subject"],
                 "body": result["reply"],
                 "timestamp": current_time()
-            }
+            },
+            sender_email=customer_email
         )
 
         add_email_log(
@@ -257,9 +259,12 @@ def get_conversations():
             item["customer_name"] = c["name"] if c else "Unknown"
             item["customer_email"] = c["email"] if c else "Unknown"
         else:
-            incoming = next((m for m in conv.get("messages", []) if m.get("direction") == "incoming"), None)
-            item["customer_name"] = incoming["sender"] if incoming else "Unknown"
-            item["customer_email"] = incoming["sender"] if incoming else "Unknown"
+            sender = conv.get("sender_email")
+            if not sender:
+                incoming = next((m for m in conv.get("messages", []) if m.get("direction") == "incoming"), None)
+                sender = incoming["sender"] if incoming else "Unknown"
+            item["customer_name"] = sender
+            item["customer_email"] = sender
 
         enriched.append(item)
     return jsonify(enriched)
