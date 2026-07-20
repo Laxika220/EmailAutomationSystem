@@ -29,10 +29,10 @@ CORS(app)
 
 
 @app.route("/email", methods=["POST"])
+@app.route("/email", methods=["POST"])
 def receive_email():
 
     try:
-
         data = request.get_json()
 
         customer_email = data["envelope"]["from"]
@@ -42,7 +42,6 @@ def receive_email():
         print("=" * 60)
         print("New Customer Email")
         print("=" * 60)
-
         print(f"From    : {customer_email}")
         print(f"Subject : {customer_subject}")
         print(f"Message :\n{customer_message}")
@@ -62,81 +61,126 @@ def receive_email():
         )
 
         if not message_id:
-           message_id = f"TEST-{uuid.uuid4()}"
-            
-        headers = data.get("headers", {})
-        
+            message_id = f"TEST-{uuid.uuid4()}"
 
-        if message_id and get_email_log(message_id):
+        # Ignore duplicate emails
+        if get_email_log(message_id):
             print("Duplicate email received. Ignoring.")
             return "Already Processed", 200
 
+        # -----------------------------
+        # Generate AI Reply
+        # -----------------------------
         result = generate_reply(mail)
 
         if result is None:
+            print("generate_reply() returned None")
             return "Generation Failed", 500
 
         order = result.get("order")
         order_id = order.get("order_id") if order else None
 
-        if result.get("backend_action") != "NONE" and order:
-            perform_backend_action(
-                result["backend_action"],
-                order,
-                result["parameters"]
+        # -----------------------------
+        # Backend Action
+        # -----------------------------
+        try:
+            if result.get("backend_action") != "NONE" and order:
+                perform_backend_action(
+                    result["backend_action"],
+                    order,
+                    result["parameters"]
+                )
+            print("Backend action completed.")
+        except Exception:
+            print("ERROR: perform_backend_action()")
+            traceback.print_exc()
+
+        # -----------------------------
+        # Send Email
+        # -----------------------------
+        try:
+            send_email(
+                mail["from"],
+                result["subject"],
+                result["reply"]
             )
+            print("Reply email sent.")
+        except Exception:
+            print("ERROR: send_email()")
+            traceback.print_exc()
+            return "Email Send Failed", 500
 
-        send_email(
-            mail["from"],
-            result["subject"],
-            result["reply"]
-        )
+        # -----------------------------
+        # Save Incoming Message
+        # -----------------------------
+        try:
+            add_message(
+                order_id,
+                {
+                    "message_id": message_id,
+                    "direction": "incoming",
+                    "channel": "Email",
+                    "sender": customer_email,
+                    "subject": customer_subject,
+                    "body": customer_message,
+                    "timestamp": current_time()
+                },
+                sender_email=customer_email
+            )
+            print("Incoming message saved.")
+        except Exception:
+            print("ERROR: add_message() incoming")
+            traceback.print_exc()
 
-        conversation = add_message(
-            order_id,
-            {
-                "message_id": message_id,
-                "direction": "incoming",
-                "channel": "Email",
-                "sender": customer_email,
-                "subject": customer_subject,
-                "body": customer_message,
-                "timestamp": current_time()
-            },
-            sender_email=customer_email
-        )
-        
-        add_message(
-            order_id,
-            {
-                "message_id": message_id,
-                "direction": "outgoing",
-                "channel": "Email",
-                "sender": "Elemental Concept",
-                "subject": result["subject"],
-                "body": result["reply"],
-                "timestamp": current_time()
-            },
-            sender_email=customer_email
-        )
+        # -----------------------------
+        # Save Outgoing Message
+        # -----------------------------
+        try:
+            add_message(
+                order_id,
+                {
+                    "message_id": f"{message_id}-reply",
+                    "direction": "outgoing",
+                    "channel": "Email",
+                    "sender": "Elemental Concept",
+                    "subject": result["subject"],
+                    "body": result["reply"],
+                    "timestamp": current_time()
+                },
+                sender_email=customer_email
+            )
+            print("Outgoing message saved.")
+        except Exception:
+            print("ERROR: add_message() outgoing")
+            traceback.print_exc()
 
-        add_email_log(
-            {
-                "message_id": message_id,
-                "customer_email": customer_email,
-                "order_id": order_id,
-                "backend_action": result["backend_action"],
-                "processed_at": current_time(),
-                "status": "Processed"
-            }
-        )
+        # -----------------------------
+        # Save Email Log
+        # -----------------------------
+        try:
+            add_email_log(
+                {
+                    "message_id": message_id,
+                    "customer_email": customer_email,
+                    "order_id": order_id,
+                    "backend_action": result["backend_action"],
+                    "processed_at": current_time(),
+                    "status": "Processed"
+                }
+            )
+            print("Email log saved.")
+        except Exception:
+            print("ERROR: add_email_log()")
+            traceback.print_exc()
+
+        print("Email processing completed successfully.")
         return "OK", 200
 
-    except Exception :
+    except Exception:
+        print("FATAL ERROR inside /email endpoint")
         traceback.print_exc()
         return "Internal Server Error", 500
-
-
+        
 def get_conversation_by_id(conversation_id):
     return find_by_key(
         CONVERSATIONS,
@@ -310,6 +354,15 @@ def serve_index():
 def version():
     return {
         "version": "2026-07-20-conversation-fix"
+    }
+
+@app.route("/debug/db")
+def debug_db():
+    return {
+        "conversations": len(CONVERSATIONS),
+        "email_logs": len(EMAIL_LOGS),
+        "last_conversation": CONVERSATIONS[-1] if CONVERSATIONS else None,
+        "last_email_log": EMAIL_LOGS[-1] if EMAIL_LOGS else None
     }
 
 @app.route("/<path:path>")
