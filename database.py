@@ -121,7 +121,7 @@ def add_message(order_id, message, sender_email=None):
 
     conversation["messages"].append(message)
     save_conversations()
-
+    return conversation
 
 #Update
 def update_order(order):

@@ -71,36 +71,38 @@ Message:
 
         print("Sentiment Analysis S.")
 
-
     order_id = extract_order_id(email_text)
 
-    if order_id is None:
-        return missing_order_reply()
-
-    order = get_order(order_id)
-
-    if order is None:
-        return invalid_order_reply(order_id)
-
-
-    status = order.get("status", "Unknown")
-
+    order = None
+    customer = {}
+    product = {}
+    
+    if order_id:
+        order = get_order(order_id)
+    
+        if order is None:
+            return invalid_order_reply(order_id)
+    
+        customer = get_customer(order["customer_id"]) or {}
+        product = get_product(order["product_id"]) or {}
+    
+    status = order.get("status", "Unknown") if order else "Unknown"
+    
     instruction = STATUS_INSTRUCTIONS.get(
         status,
         STATUS_INSTRUCTIONS["Unknown"]
     )
-
+    
     policy = STATUS_POLICIES.get(
         status,
         STATUS_POLICIES["Unknown"]
     )
 
     status_instruction = instruction["instructions"]
-
-    customer = get_customer(order["customer_id"]) or {}
-    product = get_product(order["product_id"]) or {}
-
+    
     context = {
+    "order_found": order is not None,
+    "order_id": order_id,
     "customer": customer,
     "product": product,
     "order": order,
@@ -111,6 +113,9 @@ Message:
 
     prompt = f"""
 You are a Senior Customer Support Executive at ELEMENTAL CONCEPT.
+Your primary goal is to resolve the customer's problem while maintaining a natural, empathetic conversation.
+Always understand WHY the customer is contacting support before deciding HOW to respond.
+If information is missing, explain what is needed and why it is needed instead of giving a generic response.
 
 Write a reply that sounds like an experienced human customer support executive.
 
@@ -164,7 +169,34 @@ Return ONLY valid JSON in this exact format:
     "subject": "...",
     "reply": "..."
 }}
+--------------------------------------------------
+Order Handling Rules
 
+The "order_found" field tells you whether a valid order was located.
+
+If order_found is false:
+
+- Do NOT invent any order information.
+- Do NOT assume an order exists.
+- First understand the customer's intent.
+- Respond naturally to that intent.
+- Explain that you cannot verify the order until you receive enough information.
+- Ask for the Order ID.
+- If the customer does not know the Order ID, ask for any of:
+  • Email used while placing the order
+  • Registered mobile number
+  • Product name
+  • Approximate purchase date
+- If the customer expresses frustration, delay, cancellation, refund, or another issue, acknowledge that concern before asking for the missing information.
+- Never respond with only "Please provide your Order ID."
+--------------------------------------------------
+Before writing the reply:
+
+1. Determine the customer's primary intent.
+2. Determine whether enough information is available to resolve it.
+3. If information is missing, explain what is needed while still addressing the customer's concern.
+4. Then generate the reply.
+--------------------------------------------------
 Allowed intent values:
 {json.dumps(sorted(list(ALLOWED_INTENTS)), indent=4)}
 Choose ONLY ONE intent from this list.
@@ -231,7 +263,7 @@ Do not write ```json.
                 )
 
             result["order"] = order
-            result["order_id"] = order["order_id"]
+            result["order_id"] = order["order_id"] if order else None
             return result
 
         except (json.JSONDecodeError, ValueError) as e:
@@ -316,38 +348,6 @@ Could you please verify that the Order ID is correct and resend it? If possible,
 • Product name
 
 Once we receive the correct information, we'll be happy to assist you further.
-
-Best Regards,
-
-ELEMENTAL CONCEPT
-AI Customer Support Executive""",
-        "order": None,
-        "order_id": None
-    }
-
-def missing_order_reply():
-
-    return {
-        "intent": "Missing Order ID",
-        "backend_action": "NONE",
-        "parameters": {},
-        "subject": "Order ID Required",
-        "reply": """Dear Customer,
-
-Thank you for contacting ELEMENTAL CONCEPT.
-
-We'd be happy to assist you with your request. However, we couldn't find an Order ID in your email.
-
-To help us locate your order and provide accurate assistance, please reply with your Order ID.
-
-If you are unable to locate your Order ID, you may also share any of the following details:
-
-• The email address used while placing the order
-• The approximate date of purchase
-• The product name
-• The registered mobile number (if applicable)
-
-Once we receive this information, we'll be happy to assist you further.
 
 Best Regards,
 

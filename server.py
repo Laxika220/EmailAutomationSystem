@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
+import uuid
+import traceback
 
 from llm_reply import generate_reply, send_email
 from backend import perform_backend_action, current_time
@@ -58,6 +60,10 @@ def receive_email():
             or headers.get("message-id")
             or headers.get("Message-ID")
         )
+
+        if not message_id:
+           message_id = f"TEST-{uuid.uuid4()}"
+            
         headers = data.get("headers", {})
         
 
@@ -86,7 +92,7 @@ def receive_email():
             result["reply"]
         )
 
-        add_message(
+        conversation = add_message(
             order_id,
             {
                 "message_id": message_id,
@@ -99,7 +105,7 @@ def receive_email():
             },
             sender_email=customer_email
         )
-
+        
         add_message(
             order_id,
             {
@@ -126,11 +132,17 @@ def receive_email():
         )
         return "OK", 200
 
-    except Exception as e:
-
-        print(f"Server Error: {e}")
+    except Exception :
+        traceback.print_exc()
         return "Internal Server Error", 500
 
+
+def get_conversation_by_id(conversation_id):
+    return find_by_key(
+        CONVERSATIONS,
+        "conversation_id",
+        conversation_id
+    )
 
 # ──────────────────────────────────────────────
 # Dashboard API Endpoints
@@ -270,13 +282,15 @@ def get_conversations():
     return jsonify(enriched)
 
 
-@app.route("/api/conversations/<order_id>", methods=["GET"])
-def get_single_conversation(order_id):
-    conv = get_conversation(order_id)
+@app.route("/api/conversations/id/<conversation_id>")
+def get_single_conversation(conversation_id):
+
+    conv = get_conversation_by_id(conversation_id)
+
     if not conv:
         return jsonify({"error": "Conversation not found"}), 404
-    return jsonify(conv)
 
+    return jsonify(conv)
 
 @app.route("/api/products", methods=["GET"])
 def get_products():
@@ -292,6 +306,11 @@ def get_products():
 def serve_index():
     return send_from_directory(DIST_DIR, "index.html")
 
+@app.route("/version")
+def version():
+    return {
+        "version": "2026-07-18-conversation-fix"
+    }
 
 @app.route("/<path:path>")
 def serve_static(path):
