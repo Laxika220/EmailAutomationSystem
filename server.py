@@ -29,7 +29,6 @@ CORS(app)
 
 
 @app.route("/email", methods=["POST"])
-@app.route("/email", methods=["POST"])
 def receive_email():
 
     try:
